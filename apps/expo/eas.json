@@ -23,6 +23,20 @@
         "EXPO_PUBLIC_APNS_ENVIRONMENT": "sandbox"
       }
     },
+    "android-apk": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "HARK_BUILD_PLATFORM": "android",
+        "EXPO_PUBLIC_API_URL": "https://hark.dokploy.touchtech.club",
+        "ANDROID_PACKAGE": "club.touchtech.hark",
+        "EAS_PROJECT_ID": "245beaff-53e2-4a14-a314-8b7e78a3fc40",
+        "EXPO_PUBLIC_EAS_PROJECT_ID": "245beaff-53e2-4a14-a314-8b7e78a3fc40",
+        "GOOGLE_SERVICES_JSON_CONFIGURED": "true"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "distribution": "store",

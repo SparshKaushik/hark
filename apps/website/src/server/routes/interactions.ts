@@ -345,14 +345,12 @@ export const agentRoute = new Hono<AgentEnv>()
       if (owned.length !== parsed.data.deviceIds.length) {
         return c.json({ error: "Invalid device selection" }, 400);
       }
-      selectedDevices = owned.filter((row) => row.active && row.platform === "ios");
+      selectedDevices = owned.filter((row) => row.active);
     } else {
       selectedDevices = await db
         .select()
         .from(device)
-        .where(
-          and(eq(device.userId, token.userId), eq(device.active, true), eq(device.platform, "ios")),
-        )
+        .where(and(eq(device.userId, token.userId), eq(device.active, true)))
         .orderBy(desc(device.lastSeenAt));
       if (billing.limits.devices !== null) {
         selectedDevices = selectedDevices.slice(0, billing.limits.devices);
@@ -560,14 +558,12 @@ export const agentRoute = new Hono<AgentEnv>()
       if (owned.length !== parsed.data.deviceIds.length) {
         return c.json({ error: "Invalid device selection" }, 400);
       }
-      selectedDevices = owned.filter((row) => row.active && row.platform === "ios");
+      selectedDevices = owned.filter((row) => row.active);
     } else {
       selectedDevices = await db
         .select()
         .from(device)
-        .where(
-          and(eq(device.userId, token.userId), eq(device.active, true), eq(device.platform, "ios")),
-        )
+        .where(and(eq(device.userId, token.userId), eq(device.active, true)))
         .orderBy(desc(device.lastSeenAt));
       if (billing.limits.devices !== null) {
         selectedDevices = selectedDevices.slice(0, billing.limits.devices);

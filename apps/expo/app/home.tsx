@@ -89,7 +89,7 @@ export default function HomeScreen() {
     setLastError(null);
     try {
       if (!Device.isDevice) {
-        throw new Error("Push notifications require a physical iPhone.");
+        throw new Error("Push notifications require a physical device.");
       }
       const projectId =
         (Constants.expoConfig?.extra?.eas as { projectId?: string } | undefined)?.projectId ??
@@ -110,10 +110,10 @@ export default function HomeScreen() {
       const registered = await api.registerDevice({
         expoPushToken: expoToken,
         ...(apns ? { apnsToken: apns } : {}),
-        platform: "ios",
+        platform: Platform.OS === "android" ? "android" : "ios",
         deviceName: Device.deviceName ?? undefined,
         interactionSchemaVersion: 1,
-        ...(Number.parseFloat(String(Platform.Version)) >= 17
+        ...(Platform.OS === "ios" && Number.parseFloat(String(Platform.Version)) >= 17
           ? { liveActivityInteractionVersion: 1 as const }
           : {}),
       });
@@ -270,8 +270,8 @@ export default function HomeScreen() {
 
         <Text style={styles.greeting}>
           {ready
-            ? "This iPhone is ready to receive notifications."
-            : "Two steps and this iPhone starts receiving your webhooks."}
+            ? "This device is ready to receive notifications."
+            : "Two steps and this device starts receiving your webhooks."}
         </Text>
 
         {ready ? (
@@ -301,7 +301,7 @@ export default function HomeScreen() {
               body={
                 registration === "registered"
                   ? "This device is registered and ready when notifications are enabled."
-                  : "Links this iPhone to your account so your services can reach it."
+                  : "Links this device to your account so your services can reach it."
               }
               actionLabel={
                 registration === "registered"

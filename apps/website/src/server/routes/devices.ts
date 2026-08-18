@@ -20,7 +20,7 @@ import { type AuthedEnv, requireAuth } from "../middleware";
 function toDto(row: typeof device.$inferSelect): DeviceDto {
   return {
     id: row.id,
-    platform: "ios",
+    platform: row.platform === "android" ? "android" : "ios",
     deviceName: row.deviceName,
     active: row.active,
     liveActivitiesCapable: Boolean(row.liveActivityPushToStartTokenCiphertext),
@@ -224,7 +224,7 @@ export const devicesRoute = new Hono<AuthedEnv>()
           userId: user.id,
           expoPushToken: parsed.data.expoPushToken,
           apnsToken: parsed.data.apnsToken ?? null,
-          platform: "ios",
+          platform: parsed.data.platform,
           deviceName: parsed.data.deviceName ?? null,
           interactionSchemaVersion: parsed.data.interactionSchemaVersion ?? null,
           liveActivityInteractionVersion: parsed.data.liveActivityInteractionVersion ?? null,
@@ -237,6 +237,7 @@ export const devicesRoute = new Hono<AuthedEnv>()
           set: {
             userId: user.id,
             apnsToken: parsed.data.apnsToken ?? null,
+            platform: parsed.data.platform,
             deviceName: parsed.data.deviceName ?? null,
             interactionSchemaVersion: parsed.data.interactionSchemaVersion ?? null,
             liveActivityInteractionVersion: parsed.data.liveActivityInteractionVersion ?? null,

@@ -153,9 +153,7 @@ export const hooksRoute = new Hono()
       if (selected.length !== parsed.data.deviceIds.length) {
         return c.json<WebhookResponse>({ ok: false, error: "Invalid device selection" }, 400);
       }
-      targetedDevices = selected.filter(
-        (registeredDevice) => registeredDevice.active && registeredDevice.platform === "ios",
-      );
+      targetedDevices = selected.filter((registeredDevice) => registeredDevice.active);
     }
 
     const since = new Date(Date.now() - 60_000);
@@ -281,9 +279,7 @@ export const hooksRoute = new Hono()
       const activeDevices = await db
         .select()
         .from(device)
-        .where(
-          and(eq(device.userId, svc.userId), eq(device.active, true), eq(device.platform, "ios")),
-        )
+        .where(and(eq(device.userId, svc.userId), eq(device.active, true)))
         .orderBy(desc(device.lastSeenAt));
       devices =
         billing.limits.devices === null
@@ -559,13 +555,7 @@ export const hooksRoute = new Hono()
       const devices = await db
         .select()
         .from(device)
-        .where(
-          and(
-            eq(device.userId, match.service.userId),
-            eq(device.active, true),
-            eq(device.platform, "ios"),
-          ),
-        );
+        .where(and(eq(device.userId, match.service.userId), eq(device.active, true)));
       const messages = buildNotificationWithdrawalPushMessages(
         devices.map((registeredDevice) => registeredDevice.expoPushToken),
         eventId,

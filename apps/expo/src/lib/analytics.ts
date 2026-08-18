@@ -2,6 +2,7 @@ import type { ClientAnalyticsEventInput, ClientAnalyticsEventName } from "@hark/
 import Constants from "expo-constants";
 import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import { API_URL, getCookie } from "./auth";
 
 const INSTALLATION_ID_KEY = "hark.analytics.installationId";
@@ -38,12 +39,15 @@ export async function trackAppEvent(
       eventId: randomId(),
       anonymousId: await getInstallationId(),
       sessionId,
-      surface: "ios",
+      surface: Platform.OS === "android" ? "android" : "ios",
       name,
       ...input,
       properties: {
         appVersion: Constants.expoConfig?.version ?? undefined,
-        appBuild: Constants.expoConfig?.ios?.buildNumber ?? undefined,
+        appBuild:
+          Platform.OS === "android"
+            ? String(Constants.expoConfig?.android?.versionCode ?? "") || undefined
+            : (Constants.expoConfig?.ios?.buildNumber ?? undefined),
         ...input.properties,
       },
     };

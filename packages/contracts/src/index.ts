@@ -300,7 +300,7 @@ export interface EventDto {
 export const deviceRegisterSchema = z.object({
   expoPushToken: z.string().min(1).max(400),
   apnsToken: z.string().min(1).max(400).optional(),
-  platform: z.literal("ios"),
+  platform: z.enum(["ios", "android"]),
   deviceName: z.string().trim().max(80).optional(),
   interactionSchemaVersion: z.literal(1).optional(),
   liveActivityInteractionVersion: z.literal(1).optional(),
@@ -340,7 +340,7 @@ export const clientAnalyticsEventSchema = z.object({
   eventId: analyticsIdentifierSchema,
   anonymousId: analyticsIdentifierSchema,
   sessionId: analyticsIdentifierSchema,
-  surface: z.enum(["web", "ios"]),
+  surface: z.enum(["web", "ios", "android"]),
   name: clientAnalyticsEventNameSchema,
   path: z
     .string()
@@ -379,7 +379,7 @@ export type AppleNativeTokenExchangeInput = z.infer<typeof appleNativeTokenExcha
 
 export interface DeviceDto {
   id: string;
-  platform: "ios";
+  platform: "ios" | "android";
   deviceName: string | null;
   active: boolean;
   liveActivitiesCapable: boolean;

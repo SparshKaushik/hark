@@ -1,5 +1,9 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
+const isAndroidBuild = process.env.HARK_BUILD_PLATFORM === "android";
+const googleServicesFile = "./google-services.json";
+const hasGoogleServices = process.env.GOOGLE_SERVICES_JSON_CONFIGURED === "true";
+
 export default ({ config: _config }: ConfigContext): ExpoConfig => ({
   name: "Hark",
   slug: "hark",
@@ -8,7 +12,7 @@ export default ({ config: _config }: ConfigContext): ExpoConfig => ({
   scheme: "hark",
   orientation: "portrait",
   userInterfaceStyle: "light",
-  platforms: ["ios"],
+  platforms: ["ios", "android"],
   ios: {
     bundleIdentifier: "ceo.ryan.hark",
     usesAppleSignIn: true,
@@ -26,10 +30,18 @@ export default ({ config: _config }: ConfigContext): ExpoConfig => ({
       NSUserActivityTypes: ["INSendMessageIntent"],
     },
   },
+  android: {
+    package: process.env.ANDROID_PACKAGE ?? "club.touchtech.hark",
+    icon: "./assets/icon.png",
+    adaptiveIcon: {
+      foregroundImage: "./assets/icon.png",
+      backgroundColor: "#035B49",
+    },
+    ...(hasGoogleServices ? { googleServicesFile } : {}),
+  },
   plugins: [
-    "./plugins/with-ios-scene-delegate",
+    ...(isAndroidBuild ? [] : ["./plugins/with-ios-scene-delegate", "expo-apple-authentication"]),
     "expo-router",
-    "expo-apple-authentication",
     "expo-secure-store",
     [
       "expo-alternate-app-icons",
@@ -129,25 +141,33 @@ export default ({ config: _config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
-    [
-      "expo-widgets",
-      {
-        bundleIdentifier: "ceo.ryan.hark.widgets",
-        groupIdentifier: "group.ceo.ryan.hark",
-        enablePushNotifications: true,
-        frequentUpdates: true,
-      },
-    ],
-    [
-      "@bacons/apple-targets",
-      {
-        appleTeamId: process.env.APPLE_TEAM_ID ?? "9G68SMNHEU",
-      },
-    ],
+    ...(isAndroidBuild
+      ? []
+      : [
+          [
+            "expo-widgets",
+            {
+              bundleIdentifier: "ceo.ryan.hark.widgets",
+              groupIdentifier: "group.ceo.ryan.hark",
+              enablePushNotifications: true,
+              frequentUpdates: true,
+            },
+          ] as [string, Record<string, unknown>],
+          [
+            "@bacons/apple-targets",
+            {
+              appleTeamId: process.env.APPLE_TEAM_ID ?? "9G68SMNHEU",
+            },
+          ] as [string, Record<string, unknown>],
+        ]),
   ],
   extra: {
     eas: {
-      projectId: process.env.EAS_PROJECT_ID ?? "0fce08a7-f312-4b58-a907-85a648113946",
+      projectId:
+        process.env.EAS_PROJECT_ID ??
+        (isAndroidBuild
+          ? "245beaff-53e2-4a14-a314-8b7e78a3fc40"
+          : "0fce08a7-f312-4b58-a907-85a648113946"),
     },
   },
 });

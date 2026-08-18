@@ -539,7 +539,7 @@ describe("serviceCreateSchema", () => {
 });
 
 describe("deviceRegisterSchema", () => {
-  it("constrains platform to ios", () => {
+  it("accepts supported mobile platforms", () => {
     expect(
       deviceRegisterSchema.safeParse({ expoPushToken: "ExponentPushToken[x]", platform: "ios" })
         .success,
@@ -549,7 +549,7 @@ describe("deviceRegisterSchema", () => {
         expoPushToken: "ExponentPushToken[x]",
         platform: "android",
       }).success,
-    ).toBe(false);
+    ).toBe(true);
   });
 });
 

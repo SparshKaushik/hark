@@ -1,11 +1,9 @@
-import * as AppleAuthentication from "expo-apple-authentication";
 import { Redirect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { trackAppEvent } from "../src/lib/analytics";
-import { signInWithApple } from "../src/lib/apple-auth";
 import { authClient, useSession } from "../src/lib/auth";
 import { colors, fonts, tightTracking } from "../src/lib/theme";
 
@@ -38,6 +36,7 @@ export default function SignInScreen() {
     setError(null);
     try {
       void trackAppEvent("auth_started", { path: "/", properties: { provider: "apple" } });
+      const { signInWithApple } = await import("../src/lib/apple-auth");
       const result = await signInWithApple();
       if (result === "signed-in") {
         void trackAppEvent("auth_completed", { path: "/home", properties: { provider: "apple" } });
@@ -69,15 +68,14 @@ export default function SignInScreen() {
           <ActivityIndicator color={colors.accent} />
         ) : (
           <>
-            <AppleAuthentication.AppleAuthenticationButton
-              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-              buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-              cornerRadius={26}
-              onPress={() => {
-                if (!busy) void continueWithApple();
-              }}
-              style={[styles.appleButton, busy && styles.buttonDisabled]}
-            />
+            {Platform.OS === "ios" ? (
+              <AppleSignInButton
+                busy={busy !== null}
+                onPress={() => {
+                  if (!busy) void continueWithApple();
+                }}
+              />
+            ) : null}
             {busy === "apple" ? (
               <ActivityIndicator color={colors.ink} style={styles.appleSpinner} />
             ) : null}
@@ -101,6 +99,20 @@ export default function SignInScreen() {
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </View>
     </SafeAreaView>
+  );
+}
+
+function AppleSignInButton({ busy, onPress }: { busy: boolean; onPress: () => void }) {
+  const AppleAuthentication =
+    require("expo-apple-authentication") as typeof import("expo-apple-authentication");
+  return (
+    <AppleAuthentication.AppleAuthenticationButton
+      buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+      buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+      cornerRadius={26}
+      onPress={onPress}
+      style={[styles.appleButton, busy && styles.buttonDisabled]}
+    />
   );
 }
 

@@ -1,0 +1,117 @@
+name: Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: Public HTTPS URL of the Hark server (overrides the repository variable)
+        required: false
+        type: string
+  push:
+    branches:
+      - "**"
+    paths:
+      - ".github/workflows/android-apk.yml"
+      - "apps/expo/**"
+      - "packages/contracts/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "patches/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hark-android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HARK_BUILD_PLATFORM: android
+      EXPO_PUBLIC_API_URL: ${{ inputs.api_url || vars.HARK_API_URL || 'https://hark.dokploy.touchtech.club' }}
+      ANDROID_PACKAGE: ${{ vars.ANDROID_PACKAGE || 'club.touchtech.hark' }}
+      EAS_PROJECT_ID: ${{ vars.EAS_PROJECT_ID }}
+      EXPO_PUBLIC_EAS_PROJECT_ID: ${{ vars.EAS_PROJECT_ID }}
+      GOOGLE_SERVICES_JSON_CONFIGURED: "true"
+      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Validate Android configuration
+        shell: bash
+        run: |
+          if [[ ! "$EXPO_PUBLIC_API_URL" =~ ^https://[^/]+ ]]; then
+            echo "Set the HARK_API_URL repository variable to your public HTTPS Dokploy URL." >&2
+            exit 1
+          fi
+          if [[ -z "$EAS_PROJECT_ID" ]]; then
+            echo "Set the EAS_PROJECT_ID repository variable to your Expo project ID." >&2
+            exit 1
+          fi
+          if [[ -z "$GOOGLE_SERVICES_JSON" ]]; then
+            echo "Set the GOOGLE_SERVICES_JSON repository secret for your Firebase Android app." >&2
+            exit 1
+          fi
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Expo authentication
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: 22.0.0
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Restore Firebase Android configuration
+        working-directory: apps/expo
+        run: printf '%s' "$GOOGLE_SERVICES_JSON" > google-services.json
+
+      - name: Generate Android project
+        working-directory: apps/expo
+        run: pnpm exec expo prebuild --platform android --clean --no-install
+
+      - name: Build APK
+        working-directory: apps/expo/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Collect APK
+        run: |
+          mkdir -p artifacts
+          cp apps/expo/android/app/build/outputs/apk/release/app-release.apk artifacts/hark-${GITHUB_SHA::7}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hark-android-apk-${{ github.run_number }}
+          path: artifacts/*.apk
+          if-no-files-found: error
+          retention-days: 30
