@@ -517,7 +517,11 @@ function PlanModal({
         {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
 
         <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-ink-faint">Cancel anytime.</p>
+          <p className="text-xs text-ink-faint">
+            {billing?.plan === "pro" && !billing.configured
+              ? "Pro is managed by this Hark server."
+              : "Cancel anytime."}
+          </p>
           <button
             type="button"
             disabled={busy || billing === null || !billing.configured || activating}
@@ -528,11 +532,13 @@ function PlanModal({
               ? "Opening…"
               : activating
                 ? "Activating…"
-                : billing?.configured === false
-                  ? "Billing unavailable"
-                  : billing?.plan === "pro"
-                    ? "Manage billing"
-                    : "Upgrade to Pro · $8/month"}
+                : billing?.plan === "pro" && billing.configured === false
+                  ? "Pro enabled"
+                  : billing?.configured === false
+                    ? "Billing unavailable"
+                    : billing?.plan === "pro"
+                      ? "Manage billing"
+                      : "Upgrade to Pro · $8/month"}
           </button>
         </div>
       </section>

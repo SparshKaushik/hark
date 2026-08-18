@@ -29,6 +29,8 @@ const envSchema = z.object({
   APNS_ENVIRONMENT: z.enum(["sandbox", "production"]).default("sandbox"),
   /** Autumn production secret key. Kept server-side and never exposed to clients. */
   AUTUMN_API_KEY: z.string().optional(),
+  /** Grants every account Pro entitlements without a billing provider (self-hosted deployments). */
+  SELF_HOSTED_PRO: z.stringbool().default(false),
   /**
    * Header carrying the real client IP, set (and overwritten) by a trusted edge.
    * Leave unset when the edge does not provide one: client-supplied forwarded
@@ -80,8 +82,10 @@ export function assertRuntimeEnv(): void {
       "APNS_KEY_ID / APPLE_TEAM_ID / APNS_PRIVATE_KEY are not all set — Live Activity delivery will be unavailable.",
     );
   }
-  if (!env.AUTUMN_API_KEY) {
-    problems.push("AUTUMN_API_KEY is not set — paid plans and checkout will be unavailable.");
+  if (!env.AUTUMN_API_KEY && !env.SELF_HOSTED_PRO) {
+    problems.push(
+      "AUTUMN_API_KEY is not set — paid plans and checkout will be unavailable. Set SELF_HOSTED_PRO=true to grant Pro entitlements without billing.",
+    );
   }
 
   if (env.NODE_ENV === "production" && env.BETTER_AUTH_SECRET === DEV_SECRET) {

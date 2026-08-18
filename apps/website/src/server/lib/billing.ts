@@ -27,6 +27,22 @@ function recordUpgrade(userId: string, previous: BillingDto | undefined, next: B
   track({ name: "plan_upgraded", userId, plan: "pro", outcome: "free_to_pro" });
 }
 
+function proBilling(): BillingDto {
+  return {
+    configured: false,
+    plan: "pro",
+    priceMonthly: PRO_PRICE_MONTHLY,
+    features: { deviceRouting: true },
+    limits: {
+      devices: null,
+      notificationsPerMonth: PRO_NOTIFICATIONS,
+      servicePerMinute: env.PRO_SERVICE_RATE_LIMIT_PER_MINUTE,
+      accountPerMinute: env.PRO_ACCOUNT_RATE_LIMIT_PER_MINUTE,
+    },
+    usage: { notificationsRemaining: null },
+  };
+}
+
 function freeBilling(): BillingDto {
   return {
     configured: autumn !== null,
@@ -153,6 +169,7 @@ export function clearBillingCache(userId: string): void {
 }
 
 export async function getBilling(user: AuthedUser, useCache = false): Promise<BillingDto> {
+  if (env.SELF_HOSTED_PRO) return proBilling();
   if (!autumn) return freeBilling();
 
   const cached = cache.get(user.id);
