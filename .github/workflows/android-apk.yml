@@ -33,7 +33,7 @@ jobs:
     timeout-minutes: 45
     env:
       HARK_BUILD_PLATFORM: android
-      EXPO_PUBLIC_API_URL: ${{ inputs.api_url || vars.HARK_API_URL || 'https://hark.dokploy.touchtech.club' }}
+      EXPO_PUBLIC_API_URL: ${{ inputs.api_url || vars.HARK_API_URL || 'https://hark.touchtech.club' }}
       ANDROID_PACKAGE: ${{ vars.ANDROID_PACKAGE || 'club.touchtech.hark' }}
       EAS_PROJECT_ID: ${{ vars.EAS_PROJECT_ID }}
       EXPO_PUBLIC_EAS_PROJECT_ID: ${{ vars.EAS_PROJECT_ID }}
